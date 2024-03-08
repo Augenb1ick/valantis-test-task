@@ -12,6 +12,13 @@ import {
     FilterStateType,
     initFilterState,
 } from '../../models/FilterStateType.js';
+import {
+    IDS_TO_FETCH,
+    IDS_TO_FETCH_INITIALY,
+    IDS_TO_SLICE,
+    IDS_TO_SLICE_INITIALY,
+    ITEMS_PER_PAGE,
+} from '../../utills/constants.js';
 
 const ProductList: FC = () => {
     const [products, setProducts] = useState<ProductType[]>([]);
@@ -32,9 +39,15 @@ const ProductList: FC = () => {
     const fetchProductData = async (currentPage: number) => {
         try {
             setIsLoading(true);
-            const apiOffset = !currentPage ? 100 : currentPage * 50;
-            const idsLimit = !currentPage ? 110 : 60;
-            const idsToSlice = !currentPage ? 100 : 50;
+            const apiOffset = !currentPage
+                ? 0
+                : (currentPage + 1) * ITEMS_PER_PAGE;
+            const idsLimit = !currentPage
+                ? IDS_TO_FETCH_INITIALY
+                : IDS_TO_FETCH;
+            const idsToSlice = !currentPage
+                ? IDS_TO_SLICE_INITIALY
+                : IDS_TO_SLICE;
 
             const ids = await api.getItemsIds(apiOffset, idsLimit);
 
@@ -74,7 +87,7 @@ const ProductList: FC = () => {
 
             setIsLoading(true);
 
-            const filterResult = (await api.filterItems(
+            const filterResult = (await api.getFilterItems(
                 field,
                 value
             )) as string[];
@@ -86,6 +99,7 @@ const ProductList: FC = () => {
             const uniqueItems = getUniqueItems(products.concat(items));
 
             setProducts(uniqueItems);
+            setLoadedPage(uniqueItems.length / ITEMS_PER_PAGE - 1);
         } catch (error) {
             console.error('Error loading more products:', error);
         } finally {
@@ -137,7 +151,7 @@ const ProductList: FC = () => {
                                 pagination: {
                                     paginationModel: {
                                         page: 0,
-                                        pageSize: 50,
+                                        pageSize: ITEMS_PER_PAGE,
                                     },
                                 },
                             }}
@@ -145,7 +159,7 @@ const ProductList: FC = () => {
                                 ruRU.components.MuiDataGrid.defaultProps
                                     .localeText
                             }
-                            pageSizeOptions={[50]}
+                            pageSizeOptions={[ITEMS_PER_PAGE]}
                             onPaginationModelChange={handlePageChange}
                             loading={isLoading}
                             slots={{

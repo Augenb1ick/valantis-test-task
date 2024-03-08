@@ -55,6 +55,64 @@ class ApiClient {
         throw new Error(`Maximum number of retries reached.`);
     };
 
+    private capitalizeFirstLetter = (inputString: string) => {
+        return inputString.charAt(0).toUpperCase() + inputString.slice(1);
+    };
+
+    private sendFilterRequest = async (
+        fieldToFilter: string,
+        filterValue: string
+    ) => {
+        try {
+            const response = await this.sendAPIRequest('filter', {
+                [fieldToFilter]: filterValue,
+            });
+
+            return response.result || [];
+        } catch (error) {
+            console.error(`Error in filter request: ${error}`);
+            throw error;
+        }
+    };
+
+    getFilterItems = async (
+        fieldToFilter: string,
+        filterValue: string | number
+    ) => {
+        const filterValueLowerCase = String(filterValue).toLowerCase();
+        const filterValueUpperCaseFirstLetter = this.capitalizeFirstLetter(
+            String(filterValueLowerCase)
+        );
+
+        console.log('filterValueLowerCase', filterValueLowerCase);
+        console.log(
+            'filterValueUpperCaseFirstLetter',
+            filterValueUpperCaseFirstLetter
+        );
+
+        try {
+            const responseLowerCase = await this.sendFilterRequest(
+                fieldToFilter,
+                filterValueLowerCase
+            );
+            const responseUpperCaseFirstLetter = await this.sendFilterRequest(
+                fieldToFilter,
+                filterValueUpperCaseFirstLetter
+            );
+
+            const combinedResults = [
+                ...new Set([
+                    ...responseLowerCase,
+                    ...responseUpperCaseFirstLetter,
+                ]),
+            ];
+            return combinedResults;
+        } catch (error) {
+            console.error(`Error filtering items: ${error}`);
+            throw error;
+        }
+    };
+
     getItemsIds = (offset: number, limit: number) => {
         return this.sendAPIRequest('get_ids', { offset, limit }).then((res) => [
             ...new Set(res.result),
@@ -65,12 +123,6 @@ class ApiClient {
         return this.sendAPIRequest('get_items', { ids }).then((res) =>
             getUniqueItems(res.result)
         );
-    };
-
-    filterItems = (fieldToFilter: string, filterValue: string | number) => {
-        return this.sendAPIRequest('filter', {
-            [fieldToFilter]: filterValue,
-        }).then((res) => [...new Set(res.result)]);
     };
 }
 
