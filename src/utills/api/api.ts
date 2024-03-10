@@ -84,12 +84,6 @@ class ApiClient {
             String(filterValueLowerCase)
         );
 
-        console.log('filterValueLowerCase', filterValueLowerCase);
-        console.log(
-            'filterValueUpperCaseFirstLetter',
-            filterValueUpperCaseFirstLetter
-        );
-
         try {
             const responseLowerCase = await this.sendFilterRequest(
                 fieldToFilter,
